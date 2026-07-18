@@ -225,3 +225,10 @@ Look for `Access-Control-Allow-Origin` matching your frontend origin.
 - Keep `/opt/htf-data-collection/htf-backend.env` mode `600`
 - Do not commit `.env`, passwords, JWT secrets, or DB credentials
 - Prefer SSH keys over password auth for future server access
+
+---
+
+## Zimbabwe domain (cybercothtechnetworks.co.zw)
+
+For **HTD RollBook** on `htdrollbook.cybercothtechnetworks.co.zw` and `api.cybercothtechnetworks.co.zw`, see **[CLOUDFLARE-cybercothtechnetworks.md](./CLOUDFLARE-cybercothtechnetworks.md)** (NivaCity to Cloudflare nameservers, Vercel CNAME, proxied API).
+
