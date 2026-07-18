@@ -6,9 +6,9 @@
   "scripts": {
     "start": "vite",
     "dev": "vite",
-    "build": "vite build",
-    "build:prod": "vite build --mode production",
-    "build:mobile": "vite build --mode mobile",
+    "build": "npx vite build",
+    "build:prod": "npx vite build --mode production",
+    "build:mobile": "npx vite build --mode mobile",
     "preview": "vite preview",
     "test": "echo \"No tests configured\" && exit 0",
     "lint": "echo \"No lint configured\" && exit 0",
