@@ -6,7 +6,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "http://187.77.99.225:8599/api/:path*"
+      "destination": "http://api.cybercothtechnetworks.co.zw/api/:path*"
     },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
