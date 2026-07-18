@@ -1,0 +1,107 @@
+﻿# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Build output
+dist/
+frontend/dist/
+dist-ssr/
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Angular / Vite cache
+.angular/
+.cache/
+.vite/
+
+# IDE
+.vscode/
+.idea/
+*.iws
+*.iml
+*.ipr
+.project
+.classpath
+.settings/
+.springBeans
+.sts4-cache
+.factorypath
+.apt_generated
+
+# Test & coverage
+coverage/
+tmp/
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+!env.example
+!frontend/env.example
+!frontend/.env.example
+application-local.properties
+application-secrets.properties
+
+# Uploads & local media (do NOT ignore frontend/public or src assets)
+uploads/
+**/uploads/**
+
+# Mobile / native builds
+frontend/android/
+mobile-android/.gradle/
+mobile-android/local.properties
+mobile-android/app/build/
+*.apk
+*.aab
+
+# Archives & temp
+*.zip
+tmp_*
+.DS_Store
+Thumbs.db
+
+# NetBeans / Gradle
+/nbproject/private/
+/nbbuild/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Deploy / probe scripts with hardcoded SSH or DB passwords (keep out of git)
+deploy_cyberking.py
+deploy_vm.py
+deploy_dist.py
+restart_backend.py
+fix_corps_on_server.py
+repair_vm_backend.py
+repair_vm_backend_full.py
+restore_vm_backend.py
+check_vm_backend.py
+fix_vm_nginx_upload_limit.py
+inspect_vm_nginx.py
+verify_deploy.py
+_ssh_diag.py
+test_sudo.py
+probe_*.py
+
+# Local helper / one-off scripts that may contain secrets
+*.pem
+*.key
+credentials.json
+**/dialogflow-*.json
+!**/dialogflow-*-example.json
+
+docs/~$*
+~$*

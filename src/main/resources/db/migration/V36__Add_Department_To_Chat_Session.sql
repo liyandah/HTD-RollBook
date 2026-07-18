@@ -1,0 +1,2 @@
+ALTER TABLE chat_session
+    ADD COLUMN IF NOT EXISTS department VARCHAR(100);

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.HTEChatBot" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">#C21124</item>
+        <item name="colorPrimaryVariant">#6F0A15</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="android:statusBarColor">#6F0A15</item>
+        <item name="android:navigationBarColor">#FFFFFF</item>
+    </style>
+</resources>

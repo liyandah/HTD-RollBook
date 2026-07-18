@@ -1,0 +1,3 @@
+ALTER TABLE chat_session
+    ADD COLUMN IF NOT EXISTS family_mode BOOLEAN DEFAULT FALSE,
+    ADD COLUMN IF NOT EXISTS ask_marital_after_address BOOLEAN DEFAULT FALSE;

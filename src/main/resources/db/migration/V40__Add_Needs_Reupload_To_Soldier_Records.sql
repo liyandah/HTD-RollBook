@@ -1,0 +1,2 @@
+ALTER TABLE soldier_records
+    ADD COLUMN IF NOT EXISTS needs_reupload BOOLEAN DEFAULT FALSE;
