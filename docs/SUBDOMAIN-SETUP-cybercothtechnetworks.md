@@ -11,6 +11,20 @@ Use **NivaCity / mydata.city** DNS (nameservers `ns1.mydata.city` … `ns4.mydat
 
 ---
 
+## Common typo — read before adding domains
+
+The registered domain is **`cybercothtechnetworks.co.zw`** (spelling: **cyber** + **COTH** + **technetworks**).
+
+| Wrong (invalid) | Correct |
+|-----------------|---------|
+| `cyberoottechnetworks.co.zw` | `cybercothtechnetworks.co.zw` |
+| `htdrollbook.cyberoottechnetworks.co.zw` | `htdrollbook.cybercothtechnetworks.co.zw` |
+| `api.cyberoottechnetworks.co.zw` | `api.cybercothtechnetworks.co.zw` |
+
+If Vercel shows **Invalid Configuration** or DNS never validates, search every panel (Vercel Domains, NivaCity DNS, nginx, CORS) for **`cyberoot`** and replace with **`cybercoth`**. The repo, nginx on `187.77.99.225`, and CORS already use the correct spelling only.
+
+---
+
 ## Recommended subdomain names
 
 | Role | Recommended | Alternative |
