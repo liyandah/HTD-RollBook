@@ -1,11 +1,8 @@
 {
   "installCommand": "cd frontend && npm ci",
-  "buildCommand": "cd frontend && npm run build:prod",
+  "buildCommand": "cd frontend && VITE_API_BASE_URL=https://api.htdrollbook.com npm run build:prod",
   "outputDirectory": "frontend/dist",
   "framework": "vite",
-  "env": {
-    "VITE_API_BASE_URL": "https://api.htdrollbook.com"
-  },
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
