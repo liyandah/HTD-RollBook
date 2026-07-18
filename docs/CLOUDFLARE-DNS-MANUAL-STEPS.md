@@ -5,7 +5,70 @@ Use this guide when no Cloudflare API token is available in the project or shell
 **Account email:** `liyandahhella12@gmail.com`  
 **Zone (domain):** `htdrollbook.com`
 
-> Do **not** share or commit Cloudflare passwords or API tokens. Create an API token only if you want automated DNS updates later (see [Optional: API token for automation](#optional-api-token-for-automation)).
+> Do **not** share or commit Cloudflare passwords or API tokens. Create an API token only if you want automated DNS updates later (see [Step 0 — Give authorization for automation](#step-0--give-authorization-for-automation) or [Optional: API token for automation](#optional-api-token-for-automation)).
+
+---
+
+## Step 0. Add domain (empty Domains overview)
+
+Use this section first if your Cloudflare **Account Home** or **Domains** overview shows **“No domains or subdomains found”** (no websites listed).
+
+### 0.1 Add the site to Cloudflare
+
+1. On the **Domains** / **Account Home** page, click **Add domain** (top right)
+2. Enter domain: **htdrollbook.com**
+3. Choose how to proceed:
+
+   **If you do NOT own `htdrollbook.com` yet:**
+
+   - Click **Buy domain** (or register **htdrollbook.com** at your preferred registrar first)
+   - Complete purchase/registration, then return to Cloudflare and add the domain
+
+   **If you DO own `htdrollbook.com` elsewhere (GoDaddy, Namecheap, etc.):**
+
+   - Click **Add site** / continue with **htdrollbook.com**
+   - Select a plan (Free is fine for this project)
+   - Cloudflare will scan existing DNS records (you can review later)
+   - On the **nameservers** step, copy the two Cloudflare nameservers shown (for example `ada.ns.cloudflare.com` and `bob.ns.cloudflare.com` — yours will differ)
+   - Log in to your **registrar** (GoDaddy, Namecheap, etc.) → domain **htdrollbook.com** → **DNS** or **Nameservers**
+   - Replace the current nameservers with the two Cloudflare nameservers
+   - Save at the registrar
+
+4. Back in Cloudflare, wait until **htdrollbook.com** appears under **Websites** / **Domains** with status **Active**
+   - Pending status is normal until nameserver changes propagate (often minutes, sometimes up to 24–48 hours)
+   - Do not add the DNS records below until the zone is **Active**
+
+5. Once **Active**, continue with [§1 Log in to Cloudflare](#1-log-in-to-cloudflare) (confirm the domain is listed), then [§2 Open DNS settings](#2-open-dns-settings) and [§3 Add DNS records](#3-add-dns-records) for `@`, `www`, and `api`.
+
+### Step 0 — Give authorization for automation
+
+If a developer or agent will configure DNS for you, create a **Cloudflare API token** (never commit it to git):
+
+1. Cloudflare dashboard → **My Profile** (top right avatar) → **API Tokens**
+2. Click **Create Token**
+3. Use template **Edit zone DNS** (or create a custom token with):
+   - **Permissions:** Zone → DNS → Edit; Zone → Zone → Read
+   - **Zone Resources:** Include → Specific zone → **htdrollbook.com**
+4. Click **Continue to summary** → **Create Token**
+5. **Copy the token immediately** (shown only once) and send it securely to your developer — for example in a password manager share or private message, **not** in email/chat logs if avoidable
+
+**Token format to paste (example — yours will differ):**
+
+```text
+CLOUDFLARE_API_TOKEN=AbCdEf1234567890_your_actual_token_from_cloudflare
+```
+
+Or paste only the token value if asked:
+
+```text
+AbCdEf1234567890_your_actual_token_from_cloudflare
+```
+
+The developer sets it locally (never in the repo):
+
+```powershell
+$env:CLOUDFLARE_API_TOKEN = "AbCdEf1234567890_your_actual_token_from_cloudflare"
+```
 
 ---
 
@@ -17,7 +80,7 @@ Use this guide when no Cloudflare API token is available in the project or shell
 4. Enter your Cloudflare password (or use email magic link / SSO if configured)
 5. Complete any two-factor authentication if prompted
 6. On the **Account Home** page, confirm **htdrollbook.com** appears under **Websites**
-   - If the domain is missing, register or transfer it first (see `docs/CLOUDFLARE-SETUP.md` → Prerequisites)
+   - If the domain is missing, complete [Step 0. Add domain](#step-0-add-domain-empty-domains-overview) first
    - Status should be **Active** before relying on public DNS
 
 ---
@@ -172,7 +235,7 @@ In a browser:
 
 | Symptom | What to check |
 |---------|----------------|
-| Domain not in account | Register or transfer `htdrollbook.com` in Cloudflare first |
+| Domain not in account | Complete [Step 0. Add domain](#step-0-add-domain-empty-domains-overview) — register, buy, or add site + nameservers |
 | Vercel “Invalid configuration” | Match DNS to values shown in Vercel → Domains |
 | Cloudflare **521** / **522** on API | `systemctl status nginx` and `systemctl status htf-backend` on `187.77.99.225` |
 | SSL errors on API | SSL/TLS mode must be **Full**, and `api` A record must be **Proxied** |
