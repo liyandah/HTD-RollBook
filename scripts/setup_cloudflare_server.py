@@ -17,6 +17,7 @@ PRODUCTION_CORS = (
     "http://187.77.99.225,http://187.77.99.225:8599,"
     "http://localhost:5173,"
     "https://htdrollbook.com,https://www.htdrollbook.com,"
+    "https://htd-roll-book.vercel.app,"
     "https://*.vercel.app"
 )
 

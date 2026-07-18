@@ -1,9 +1,13 @@
 {
   "installCommand": "npm ci",
-  "buildCommand": "VITE_API_BASE_URL=https://api.htdrollbook.com npm run build:prod",
+  "buildCommand": "npm run build:prod",
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "http://187.77.99.225:8599/api/:path*"
+    },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
