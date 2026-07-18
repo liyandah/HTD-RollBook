@@ -29,10 +29,15 @@
 2. Set env: `DEPLOY_SSH_HOST`, `DEPLOY_SSH_USER`, `DEPLOY_SSH_PASSWORD`
 3. Run `python scripts/upload_jar_once.py` (upload + restart; does not rotate DB secrets)
 
+## Frontend (Vercel)
+- **Production URL:** https://htd-roll-book.vercel.app
+- Vercel rewrites `/api/*` → `http://187.77.99.225:8599/api/*` (see root `vercel.json`)
+- Leave `VITE_API_BASE_URL` **unset** on Vercel — see `docs/VERCEL-SETUP.md`
+- CORS on the server includes `https://htd-roll-book.vercel.app` and `https://*.vercel.app`
+
 ## Manual follow-ups
 - Rotate root SSH password after deployment
 - Read admin login from `/opt/htf-data-collection/htf-backend.env` on the server
-- Point frontend `VITE_API_BASE_URL` to `https://api.htdrollbook.com` (see `docs/CLOUDFLARE-SETUP.md`)
-- Production CORS and nginx for `api.htdrollbook.com` are configured via `scripts/setup_cloudflare_server.py`
+- Optional later: custom domain + `api.*` via `docs/CLOUDFLARE-SETUP.md` (not required for Vercel hostname)
 - Set WhatsApp/Meta tokens and mail settings in the env file for production
 - Optional: nginx reverse proxy on 443 instead of exposing 8599

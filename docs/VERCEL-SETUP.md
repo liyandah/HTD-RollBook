@@ -1,37 +1,51 @@
 # HTD RollBook — Vercel project setup
 
-Configure the **HTD-RollBook** frontend on Vercel with GitHub, environment variables, and custom domains.
+Configure the **HTD-RollBook** frontend on Vercel with GitHub. **Production uses the Vercel hostname only** — no custom domain required.
 
 | Item | Value |
 |------|-------|
 | Vercel project | [vercel.com/liyandah/htd-roll-book](https://vercel.com/liyandah/htd-roll-book) |
+| **Production URL** | **https://htd-roll-book.vercel.app** |
 | GitHub repo | [github.com/liyandah/HTD-RollBook](https://github.com/liyandah/HTD-RollBook) |
 | Production branch | `main` |
 | Framework | Vite (React) |
 | Build output | `frontend/dist` |
 
-Related docs: [CLOUDFLARE-SETUP.md](./CLOUDFLARE-SETUP.md) (DNS, API, CORS).
+Related docs: [DEPLOYMENT-SERVER-187.77.99.225.md](./DEPLOYMENT-SERVER-187.77.99.225.md) (backend VM).
 
 ---
 
-## Before you start
+## Architecture (Vercel-only)
 
-1. You need access to the **liyandah** Vercel team/account and the **HTD-RollBook** GitHub repo.
-2. Cloudflare DNS for `htdrollbook.com` should already include frontend records (see [DNS verification](#dns-records-cloudflare) below).
-3. The repo root contains `vercel.json`, which tells Vercel how to build `frontend/`:
+```
+Browser → https://htd-roll-book.vercel.app
+              ├── /*           → SPA (static)
+              └── /api/*       → Vercel rewrite → http://187.77.99.225:8599/api/*
+```
+
+- The frontend calls **same-origin** `/api/...` (empty `VITE_API_BASE_URL` at build time).
+- **Do not** point `VITE_API_BASE_URL` at `https://api.htdrollbook.com` — that domain is not in use unless you register it and configure DNS later.
+- **Do not** add `htd-roll-book.vercel.app` to Cloudflare. `*.vercel.app` is issued and served by Vercel; Cloudflare is only relevant if you add a **custom** domain later.
+
+Root `vercel.json`:
 
 ```json
 {
   "installCommand": "cd frontend && npm ci",
   "buildCommand": "cd frontend && npm run build:prod",
   "outputDirectory": "frontend/dist",
-  "framework": "vite"
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "http://187.77.99.225:8599/api/:path*"
+    },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
 ```
 
-**Recommended:** leave **Root Directory** empty in Vercel so this root `vercel.json` is used.
-
-**Alternative:** set **Root Directory** to `frontend` — Vercel will use `frontend/vercel.json` instead (same build commands, paths relative to `frontend/`).
+**Alternative:** set **Root Directory** to `frontend` — Vercel uses `frontend/vercel.json` (same rewrites, paths relative to `frontend/`).
 
 ---
 
@@ -39,150 +53,76 @@ Related docs: [CLOUDFLARE-SETUP.md](./CLOUDFLARE-SETUP.md) (DNS, API, CORS).
 
 Open: [https://vercel.com/liyandah/htd-roll-book](https://vercel.com/liyandah/htd-roll-book)
 
-1. On the project overview, complete **Connect Git Repository** (or go to **Settings → Git**).
-2. Choose **GitHub** and authorize Vercel if prompted.
-3. Select repository: **`liyandah/HTD-RollBook`**.
-4. Confirm **Production Branch**: **`main`**.
-
-If the repo is not listed, install the Vercel GitHub app for your account/org and grant access to **HTD-RollBook**.
+1. **Settings → Git** → connect **`liyandah/HTD-RollBook`**.
+2. **Production Branch**: **`main`**.
 
 ---
 
-## Step 2 — Build & output settings
+## Step 2 — Build settings
 
-Go to **Settings → General** (or review settings during the first import).
+| Setting | Value |
+|---------|-------|
+| **Root Directory** | *(empty — repo root)* recommended |
+| **Build Command** | `cd frontend && npm run build:prod` *(from `vercel.json`)* |
+| **Output Directory** | `frontend/dist` |
+| **Install Command** | `cd frontend && npm ci` |
 
-| Setting | Recommended value |
-|---------|-------------------|
-| **Framework Preset** | Vite |
-| **Root Directory** | *(empty — repo root)* |
-| **Build Command** | *(from `vercel.json`)* `cd frontend && npm run build:prod` |
-| **Output Directory** | *(from `vercel.json`)* `frontend/dist` |
-| **Install Command** | *(from `vercel.json`)* `cd frontend && npm ci` |
-
-If you set **Root Directory** to `frontend`, Vercel auto-detects Vite and uses `frontend/vercel.json`:
-
-| Setting | Value (Root Directory = `frontend`) |
-|---------|-------------------------------------|
-| Build Command | `npm run build:prod` |
-| Output Directory | `dist` |
-| Install Command | `npm ci` |
-
-Do **not** override these unless you know you need a custom pipeline.
+Do **not** override the build command to inject `VITE_API_BASE_URL=https://api.htdrollbook.com` — that breaks same-origin proxying.
 
 ---
 
 ## Step 3 — Environment variables
 
-Go to **Settings → Environment Variables**.
-
-Add:
+**Leave `VITE_API_BASE_URL` unset** in Vercel (Production and Preview).
 
 | Name | Value | Environments |
 |------|-------|--------------|
-| `VITE_API_BASE_URL` | `https://api.htdrollbook.com` | **Production**, **Preview** (recommended) |
+| `VITE_API_BASE_URL` | *(delete if present)* | — |
 
-Notes:
+If this variable was set previously, remove it and **Redeploy** so the bundle uses relative `/api/...` paths.
 
-- No trailing slash; do **not** append `/api` (routes already use `/api/...`).
-- Vite embeds this at **build time** — change the variable, then **Redeploy**.
-- For local dev, copy `frontend/env.example` → `frontend/.env` (see [CLOUDFLARE-SETUP.md](./CLOUDFLARE-SETUP.md)).
-
-Optional: leave **Development** empty if you only deploy from Git; local `.env` handles dev.
+Local dev: copy `frontend/env.example` → `frontend/.env` and leave `VITE_API_BASE_URL` empty.
 
 ---
 
-## Step 4 — Trigger first production deployment
+## Step 4 — Deploy
 
-1. Go to **Deployments**.
-2. After Git is connected, push to `main` or click **Redeploy** / **Deploy**.
-3. Wait until the build succeeds. You should see a **Production** deployment (fixes “No Production Deployment” on the checklist).
+Push to `main` or **Redeploy** from the Vercel dashboard.
 
-Vercel assigns a default URL such as:
+Live URL: **https://htd-roll-book.vercel.app**
 
-- `https://htd-roll-book.vercel.app`
-- or `https://htd-roll-book-<team>.vercel.app`
-
-That URL works immediately and is useful for smoke tests before custom DNS is live.
+Login: **https://htd-roll-book.vercel.app/login**
 
 ---
 
-## Step 5 — Add custom domains
-
-Go to **Settings → Domains → Add**.
-
-Add both:
-
-1. `htdrollbook.com` (apex)
-2. `www.htdrollbook.com`
-
-For each domain, Vercel shows required DNS records and verification status.
-
-### DNS records (Cloudflare)
-
-In **Cloudflare → htdrollbook.com → DNS → Records**, you should already have:
-
-| Type | Name | Content | Proxy |
-|------|------|---------|-------|
-| **A** | `@` | `76.76.21.21` | **DNS only** (grey cloud) recommended for first setup |
-| **CNAME** | `www` | `cname.vercel-dns.com` | **DNS only** recommended |
-
-**Is `76.76.21.21` correct?** Yes — this is Vercel’s standard apex A record IP. After you add domains in the Vercel dashboard, open **Settings → Domains**, click each domain, and compare the shown A/CNAME values. If Vercel displays a **project-specific** IP or CNAME (e.g. `cname.vercel-dns-0.com`), **use Vercel’s values** and update Cloudflare to match.
-
-Tips:
-
-- Use **DNS only** (grey cloud) on `@` and `www` until Vercel shows **Valid Configuration** and SSL is issued.
-- In Vercel, use **Refresh** (⋯ menu on the domain) if verification stays pending after DNS changes.
-- Optionally redirect `www` → apex: in **Domains**, set `htdrollbook.com` as primary and enable redirect from `www.htdrollbook.com`.
-
-The **`api`** record (`A` → `187.77.99.225`, proxied) is for the backend only — do not point it at Vercel.
-
----
-
-## Default `*.vercel.app` vs custom domain
-
-| URL | Purpose |
-|-----|---------|
-| `https://htd-roll-book.vercel.app` (or similar) | Default Vercel hostname; always available after first deploy; good for previews and testing |
-| `https://htdrollbook.com` | Production custom domain (what users should use) |
-| `https://www.htdrollbook.com` | Alias; redirect to apex if configured |
-
-**Which should you use?**
-
-- **Production users:** `https://htdrollbook.com` (and optionally `www` → apex redirect).
-- **Testing before DNS:** the `*.vercel.app` URL.
-- **Preview deployments:** each PR gets its own `*.vercel.app` URL; backend CORS already allows `https://*.vercel.app` (see [CLOUDFLARE-SETUP.md](./CLOUDFLARE-SETUP.md)).
-
-API calls from the frontend always go to `https://api.htdrollbook.com` when `VITE_API_BASE_URL` is set — regardless of whether the site is opened via `vercel.app` or `htdrollbook.com`.
-
----
-
-## Step 6 — Verify
-
-### Vercel checklist
-
-On the project overview, confirm:
-
-- [x] Connect Git Repository
-- [x] Add Custom Domain
-- [x] Production deployment on `main`
-
-### Commands
+## Step 5 — Verify
 
 ```bash
-# Default Vercel URL (replace with your actual *.vercel.app host)
+# Frontend
 curl -sI https://htd-roll-book.vercel.app
 
-# Custom domain (after DNS + SSL)
-curl -sI https://htdrollbook.com
-curl -sI https://www.htdrollbook.com
+# Login via Vercel /api proxy (replace password with value from server htf-backend.env)
+curl -s -X POST https://htd-roll-book.vercel.app/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"YOUR_ADMIN_PASSWORD"}'
 ```
 
-### Browser
+Expected: HTTP 200 with a JWT `token` in JSON.
 
-1. Open `https://htdrollbook.com`.
-2. DevTools → **Network**: API requests should target `https://api.htdrollbook.com/api/...`.
-3. No CORS errors (backend allows `https://htdrollbook.com` and `https://*.vercel.app`).
+Backend CORS on `187.77.99.225` must include `https://htd-roll-book.vercel.app` and `https://*.vercel.app` (for browser calls if you ever bypass the proxy). Same-origin proxy requests do not need CORS for typical SPA usage.
+
+---
+
+## Optional — custom domain later
+
+If you register **`htdrollbook.com`** later:
+
+1. Add the domain in **Vercel → Settings → Domains** (not Cloudflare for `*.vercel.app`).
+2. Point DNS at Vercel per their instructions (Cloudflare can front the custom domain if you choose).
+3. Add `https://htdrollbook.com` to `CORS_ALLOWED_ORIGINS` on the server.
+4. Still prefer **empty** `VITE_API_BASE_URL` and the `/api` rewrite unless you deploy a separate public API host.
+
+See [CLOUDFLARE-SETUP.md](./CLOUDFLARE-SETUP.md) only when you adopt a custom domain + `api.*` subdomain.
 
 ---
 
@@ -190,28 +130,11 @@ curl -sI https://www.htdrollbook.com
 
 | Symptom | Action |
 |---------|--------|
-| “No Production Deployment” | Connect Git; push to `main`; check **Deployments** for failed builds |
-| Build fails on `npm ci` | Ensure `frontend/package-lock.json` is committed |
-| API calls hit wrong host | Set `VITE_API_BASE_URL` in Vercel; **Redeploy** |
-| Domain “Invalid Configuration” | Match Cloudflare records to **Settings → Domains** in Vercel; grey-cloud proxy during setup |
-| SSL stuck on “Pending” | Use DNS only on `@`/`www`; **Refresh** domain in Vercel; wait for propagation |
-| SPA routes 404 on refresh | Root `vercel.json` includes SPA rewrites — ensure Root Directory is empty or use `frontend/vercel.json` |
-
----
-
-## Optional — Vercel CLI (local machine)
-
-CLI was not available in the initial setup environment. To link locally later:
-
-```bash
-npm i -g vercel
-vercel login
-cd /path/to/HTD-RollBook
-vercel link   # select team liyandah, project htd-roll-book
-vercel env pull frontend/.env.local   # optional: pull env for local testing
-```
-
-Production deploys should still flow from **Git push → `main` → Vercel**.
+| API calls go to `api.htdrollbook.com` | Remove `VITE_API_BASE_URL` from Vercel; redeploy |
+| Login 404 `/api/api/...` | Env must be empty or origin only — never `.../api` |
+| Build fails on `npm ci` | Commit `frontend/package-lock.json` |
+| SPA routes 404 on refresh | Ensure root `vercel.json` rewrites are active |
+| Used Cloudflare on `*.vercel.app` | Remove — Vercel manages that hostname |
 
 ---
 
@@ -219,10 +142,9 @@ Production deploys should still flow from **Git push → `main` → Vercel**.
 
 | What | Value |
 |------|-------|
-| Vercel project URL | https://vercel.com/liyandah/htd-roll-book |
-| Repo | `liyandah/HTD-RollBook`, branch `main` |
-| Root Directory | *(empty)* recommended |
-| Env var | `VITE_API_BASE_URL=https://api.htdrollbook.com` |
-| Domains | `htdrollbook.com`, `www.htdrollbook.com` |
-| Cloudflare apex A | `76.76.21.21` (confirm in Vercel Domains tab) |
-| Cloudflare www CNAME | `cname.vercel-dns.com` |
+| Production URL | **https://htd-roll-book.vercel.app** |
+| Login URL | **https://htd-roll-book.vercel.app/login** |
+| Admin username | `admin` (see `ADMIN_USERNAME` in server `htf-backend.env`) |
+| API proxy | `/api/*` → `http://187.77.99.225:8599/api/*` |
+| `VITE_API_BASE_URL` | **unset** on Vercel |
+| Cloudflare | **Not used** for `htd-roll-book.vercel.app` |

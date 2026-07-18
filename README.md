@@ -110,28 +110,28 @@ npm run build
 
 Output: `frontend/dist/` (static files for Vercel, nginx, etc.).
 
-Set `VITE_API_BASE_URL` at **build time** to your public API origin (no trailing `/api`), for example:
+For **Vercel production** (`https://htd-roll-book.vercel.app`), leave `VITE_API_BASE_URL` empty — root `vercel.json` rewrites `/api/*` to the backend VM. See `docs/VERCEL-SETUP.md`.
+
+Only set `VITE_API_BASE_URL` at build time if the API is on a **different public origin** (no trailing `/api`):
 
 ```bash
-# Windows PowerShell
+# Windows PowerShell — optional, non-Vercel deployments only
 $env:VITE_API_BASE_URL="https://your-api.example.com"
 npm run build
 ```
 
 ## Deployment to Vercel (Frontend)
 
-1. Push this repo to GitHub (already: `https://github.com/liyandah/HTD-RollBook.git`).
-2. In [Vercel](https://vercel.com): **Add New Project** → import `liyandah/HTD-RollBook`.
-3. Configure:
-   - **Root Directory**: `frontend`
-   - **Framework Preset**: Vite
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `dist`
-4. Environment variables (Production):
-   - `VITE_API_BASE_URL` = your HTTPS API base (no trailing `/api`)
-5. Deploy. SPA routing is covered by `frontend/vercel.json` rewrites to `index.html`.
+Production URL: **https://htd-roll-book.vercel.app**
 
-The Spring Boot API is **not** hosted on Vercel; deploy it separately (VM, container, PaaS) and point CORS / `VITE_API_BASE_URL` at that host.
+1. Push this repo to GitHub (`https://github.com/liyandah/HTD-RollBook.git`).
+2. Vercel project: [vercel.com/liyandah/htd-roll-book](https://vercel.com/liyandah/htd-roll-book) — use repo root `vercel.json` (empty Root Directory recommended).
+3. **Do not** set `VITE_API_BASE_URL` in Vercel — same-origin `/api` proxy handles the backend.
+4. **Do not** use Cloudflare for `*.vercel.app` — Vercel manages that hostname.
+
+Full steps: `docs/VERCEL-SETUP.md`.
+
+The Spring Boot API runs on the VM (`187.77.99.225:8599`); Vercel proxies `/api` to it at deploy time via rewrites.
 
 ## Environment Configuration
 
