@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Configure nginx + CORS on 187.77.99.225 for api.cybercothtechnetworks.co.zw."""
+"""Configure nginx + CORS on 187.77.99.225 for htdrollbook-api.cybercothtechnetworks.co.zw.
+
+NEVER configure api.cybercothtechnetworks.co.zw — that subdomain is AngaPay production.
+See docs/ANGAPAY-OFF-LIMITS.md.
+"""
 import os
 import re
 import sys
@@ -10,8 +14,8 @@ HOST = os.environ.get("DEPLOY_SSH_HOST", "187.77.99.225")
 USER = os.environ.get("DEPLOY_SSH_USER", "root")
 SSH_PASSWORD = os.environ.get("DEPLOY_SSH_PASSWORD")
 REMOTE_ENV = "/opt/htf-data-collection/htf-backend.env"
-NGINX_SITE = "/etc/nginx/sites-available/api.cybercothtechnetworks.co.zw"
-API_DOMAIN = "api.cybercothtechnetworks.co.zw"
+NGINX_SITE = "/etc/nginx/sites-available/htdrollbook-api.cybercothtechnetworks.co.zw"
+API_DOMAIN = "htdrollbook-api.cybercothtechnetworks.co.zw"
 
 PRODUCTION_CORS = (
     "http://187.77.99.225,http://187.77.99.225:8599,"
@@ -20,7 +24,9 @@ PRODUCTION_CORS = (
     "https://rollbook.cybercothtechnetworks.co.zw,"
     "https://htdrollbook.com,https://www.htdrollbook.com,"
     "https://htd-roll-book.vercel.app,"
-    "https://*.vercel.app"
+    "https://*.vercel.app,"
+    "http://htdrollbook-api.cybercothtechnetworks.co.zw,"
+    "https://htdrollbook-api.cybercothtechnetworks.co.zw"
 )
 
 NGINX_CONF = f"""server {{
@@ -89,7 +95,9 @@ def main() -> int:
 
     with sftp.open(NGINX_SITE, "w") as f:
         f.write(NGINX_CONF)
-    run(f"ln -sf {NGINX_SITE} /etc/nginx/sites-enabled/api.cybercothtechnetworks.co.zw")
+    run(
+        f"ln -sf {NGINX_SITE} /etc/nginx/sites-enabled/htdrollbook-api.cybercothtechnetworks.co.zw"
+    )
     run("nginx -t")
     run("systemctl reload nginx")
     run("systemctl restart htf-backend")

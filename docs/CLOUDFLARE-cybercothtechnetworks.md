@@ -5,7 +5,9 @@ Move DNS for **`cybercothtechnetworks.co.zw`** from NivaCity (`ns1–ns4.mydata.
 | Role | Hostname | Target | Cloudflare proxy |
 |------|----------|--------|------------------|
 | Frontend (Vercel) | `htdrollbook.cybercothtechnetworks.co.zw` | `6897f6315804af9b.vercel-dns-017.com` (CNAME) | **DNS only** (grey cloud) — required for Vercel SSL |
-| Backend API | `api.cybercothtechnetworks.co.zw` | `187.77.99.225` (A) | **Proxied** (orange cloud) — Cloudflare SSL to visitors |
+| HTD Backend API | `htdrollbook-api.cybercothtechnetworks.co.zw` | `187.77.99.225` (A) | **Proxied** (orange cloud) — optional |
+
+> **`api.cybercothtechnetworks.co.zw` is AngaPay production** — do not use for HTD. See [ANGAPAY-OFF-LIMITS.md](./ANGAPAY-OFF-LIMITS.md).
 
 **Related docs:** [SUBDOMAIN-SETUP-cybercothtechnetworks.md](./SUBDOMAIN-SETUP-cybercothtechnetworks.md) (NivaCity-only path), [CLOUDFLARE-SETUP.md](./CLOUDFLARE-SETUP.md) (`htdrollbook.com`).
 
@@ -70,7 +72,9 @@ After the zone is **Active**, add records in **DNS → Records** (or use the API
 | Type | Name | Content | Proxy status | TTL |
 |------|------|---------|--------------|-----|
 | **CNAME** | `htdrollbook` | `6897f6315804af9b.vercel-dns-017.com` | **DNS only** (grey cloud) | Auto |
-| **A** | `api` | `187.77.99.225` | **Proxied** (orange cloud) | Auto |
+| **A** | `htdrollbook-api` | `187.77.99.225` | **Proxied** (orange cloud) | Auto |
+
+Do **not** create or repoint an `api` A record for HTD — `api.cybercothtechnetworks.co.zw` belongs to AngaPay.
 
 **Notes**
 
@@ -108,7 +112,7 @@ Create A record for API:
 curl.exe -s -X POST "https://api.cloudflare.com/client/v4/zones/ZONE_ID/dns_records" `
   -H "Authorization: Bearer $env:CLOUDFLARE_API_TOKEN" `
   -H "Content-Type: application/json" `
-  -d "{\"type\":\"A\",\"name\":\"api\",\"content\":\"187.77.99.225\",\"proxied\":true,\"ttl\":1}"
+  -d "{\"type\":\"A\",\"name\":\"htdrollbook-api\",\"content\":\"187.77.99.225\",\"proxied\":true,\"ttl\":1}"
 ```
 
 ---
@@ -122,7 +126,7 @@ curl.exe -s -X POST "https://api.cloudflare.com/client/v4/zones/ZONE_ID/dns_reco
 
    | Variable | Value |
    |----------|-------|
-   | `VITE_API_BASE_URL` | `https://api.cybercothtechnetworks.co.zw` |
+   | `VITE_API_BASE_URL` | Leave unset — use same-origin `/api` via `vercel.json` → `187.77.99.225:8599` |
 
 Redeploy after DNS and env changes.
 
@@ -130,7 +134,7 @@ Redeploy after DNS and env changes.
 
 ## Step 5 — SSL / Cloudflare settings (API hostname)
 
-For **`api.cybercothtechnetworks.co.zw`** with orange cloud:
+For **`htdrollbook-api.cybercothtechnetworks.co.zw`** with orange cloud:
 
 1. **SSL/TLS** → Overview → **Flexible** or **Full**:
    - **Flexible**: Cloudflare → origin over HTTP (matches current nginx on `:80` only).
@@ -147,11 +151,11 @@ Checked over SSH:
 |-------|--------|
 | `nginx` | **active** |
 | `htf-backend` | **active** |
-| Vhost `/etc/nginx/sites-enabled/api.cybercothtechnetworks.co.zw` | **`server_name api.cybercothtechnetworks.co.zw`** → `proxy_pass http://127.0.0.1:8599` |
-| Health via nginx `Host: api.cybercothtechnetworks.co.zw` | **HTTP 200** (`/actuator/health`) |
-| `CORS_ALLOWED_ORIGINS` in `/opt/htf-data-collection/htf-backend.env` | Includes `https://htdrollbook.cybercothtechnetworks.co.zw` and `https://rollbook.cybercothtechnetworks.co.zw` |
+| Vhost `htdrollbook-api.cybercothtechnetworks.co.zw` | → `proxy_pass http://127.0.0.1:8599` |
+| HTD api vhost on `api.cybercothtechnetworks.co.zw` | **Removed** (AngaPay conflict) |
+| `CORS_ALLOWED_ORIGINS` in `/opt/htf-data-collection/htf-backend.env` | HTD frontend origins + `htdrollbook-api` subdomain |
 
-No nginx/CORS changes required for these subdomains unless you add new frontend hostnames.
+AngaPay nginx/services were **not modified**. See [ANGAPAY-OFF-LIMITS.md](./ANGAPAY-OFF-LIMITS.md).
 
 ---
 

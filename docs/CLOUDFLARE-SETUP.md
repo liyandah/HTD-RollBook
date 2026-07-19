@@ -230,5 +230,5 @@ Look for `Access-Control-Allow-Origin` matching your frontend origin.
 
 ## Zimbabwe domain (cybercothtechnetworks.co.zw)
 
-For **HTD RollBook** on `htdrollbook.cybercothtechnetworks.co.zw` and `api.cybercothtechnetworks.co.zw`, see **[CLOUDFLARE-cybercothtechnetworks.md](./CLOUDFLARE-cybercothtechnetworks.md)** (NivaCity to Cloudflare nameservers, Vercel CNAME, proxied API).
+For **HTD RollBook** on `htdrollbook.cybercothtechnetworks.co.zw` and `htdrollbook-api.cybercothtechnetworks.co.zw`, see **[CLOUDFLARE-cybercothtechnetworks.md](./CLOUDFLARE-cybercothtechnetworks.md)**. **`api.cybercothtechnetworks.co.zw` is AngaPay — off limits** ([ANGAPAY-OFF-LIMITS.md](./ANGAPAY-OFF-LIMITS.md)).
 

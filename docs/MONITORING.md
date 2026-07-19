@@ -31,8 +31,10 @@ Add these to UptimeRobot, Better Stack, Pingdom, or Cloudflare Observability.
 
 | Monitor name | URL | Method | Expected | Notes |
 |--------------|-----|--------|----------|-------|
-| HTD API — direct (VM) | `http://187.77.99.225:8599/actuator/health` | GET | HTTP **200**, body contains `"status":"UP"` | Bypasses Cloudflare; best signal that the JVM is healthy |
-| HTD API — public domain | `https://api.cybercothtechnetworks.co.zw/actuator/health` | GET | HTTP **200**, `"status":"UP"` | Use once DNS + Cloudflare zone are active (see [CLOUDFLARE-cybercothtechnetworks.md](./CLOUDFLARE-cybercothtechnetworks.md)) |
+| HTD API — direct (VM) | `http://187.77.99.225:8599/actuator/health` | GET | HTTP **200**, body contains `"status":"UP"` | Primary backend health check |
+| HTD API — nginx subdomain | `http://htdrollbook-api.cybercothtechnetworks.co.zw/actuator/health` | GET | HTTP **200**, `"status":"UP"` | After DNS A record for `htdrollbook-api` is added |
+
+**Do not monitor** `api.cybercothtechnetworks.co.zw` for HTD — that hostname is AngaPay production ([ANGAPAY-OFF-LIMITS.md](./ANGAPAY-OFF-LIMITS.md)).
 
 Actuator is **public** (no JWT): `SecurityConfig` permits `/actuator/**`. Dependency: `spring-boot-starter-actuator` in `pom.xml`.
 
@@ -50,11 +52,11 @@ Optional: also watch the app root (`/` redirects to login or dashboard when auth
 ### Smoke checks (manual)
 
 ```powershell
-# Backend health (direct)
+# Backend health (direct — recommended)
 curl.exe -s http://187.77.99.225:8599/actuator/health
 
-# Backend health (domain — after DNS active)
-curl.exe -s https://api.cybercothtechnetworks.co.zw/actuator/health
+# Backend health (htdrollbook-api subdomain — after DNS)
+curl.exe -s http://htdrollbook-api.cybercothtechnetworks.co.zw/actuator/health
 
 # Frontends
 curl.exe -s -o NUL -w "%{http_code}`n" https://htd-roll-book.vercel.app/login
@@ -76,7 +78,7 @@ curl.exe -s -o NUL -w "%{http_code}`n" https://htdrollbook.cybercothtechnetworks
    - `http://187.77.99.225:8599/actuator/health`
    - `https://htd-roll-book.vercel.app/login`
    - `https://htdrollbook.cybercothtechnetworks.co.zw/login`
-   - `https://api.cybercothtechnetworks.co.zw/actuator/health` (enable after API DNS is live)
+   - `http://htdrollbook-api.cybercothtechnetworks.co.zw/actuator/health` (optional, after DNS)
 
 ---
 
@@ -87,7 +89,8 @@ Cloudflare **Health Checks** apply to zones you manage in Cloudflare. The `cyber
 ### Prerequisites
 
 - Zone added and nameservers updated per [CLOUDFLARE-cybercothtechnetworks.md](./CLOUDFLARE-cybercothtechnetworks.md)
-- DNS: `api` → A `187.77.99.225` (proxied), `htdrollbook` → Vercel CNAME (DNS only)
+- DNS: `htdrollbook-api` → A `187.77.99.225`, `htdrollbook` → Vercel CNAME (DNS only)
+- **Do not** point HTD monitors at `api.cybercothtechnetworks.co.zw` (AngaPay)
 
 ### Add a health check (dashboard)
 
@@ -95,7 +98,7 @@ Cloudflare **Health Checks** apply to zones you manage in Cloudflare. The `cyber
 2. **Traffic** → **Health Checks** → **Create**
 3. Configure:
    - **Name:** `HTD RollBook API`
-   - **Address:** `api.cybercothtechnetworks.co.zw`
+   - **Address:** `htdrollbook-api.cybercothtechnetworks.co.zw`
    - **Path:** `/actuator/health`
    - **Port:** 443 (HTTPS)
    - **Interval:** 60s (or default)

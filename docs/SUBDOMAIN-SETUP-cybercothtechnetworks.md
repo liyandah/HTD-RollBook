@@ -27,12 +27,17 @@ If Vercel shows **Invalid Configuration** or DNS never validates, search every p
 
 ## Recommended subdomain names
 
-| Role | Recommended | Alternative |
-|------|-------------|-------------|
-| **Frontend (SPA)** | `htdrollbook.cybercothtechnetworks.co.zw` | `rollbook.cybercothtechnetworks.co.zw` |
-| **Backend API** | `api.cybercothtechnetworks.co.zw` | `htdrollbook-api.cybercothtechnetworks.co.zw` |
+> **AngaPay conflict:** `api.cybercothtechnetworks.co.zw` is **AngaPay production** — never use it for HTD. See [ANGAPAY-OFF-LIMITS.md](./ANGAPAY-OFF-LIMITS.md).
 
-Use the **recommended** pair unless you have a naming conflict. The server nginx and CORS are already configured for `api.cybercothtechnetworks.co.zw` and both frontend hostnames above.
+| Role | HTD hostname | Notes |
+|------|--------------|-------|
+| **Frontend (SPA)** | `htdrollbook.cybercothtechnetworks.co.zw` | Vercel CNAME |
+| **Backend API** | `htdrollbook-api.cybercothtechnetworks.co.zw` | A → `187.77.99.225`, nginx → `:8599` |
+| **Backend API (direct)** | `187.77.99.225:8599` | Used by Vercel rewrite today — no DNS needed |
+
+Optional alias frontend: `rollbook.cybercothtechnetworks.co.zw`.
+
+**Do not use** `api.cybercothtechnetworks.co.zw` for HTD — that hostname serves AngaPay.
 
 ---
 
@@ -62,19 +67,15 @@ Optional alias (same Vercel project):
 |------|-------------|-------|-------|
 | **A** | `htdrollbook` | `76.76.21.21` | Vercel anycast IP; confirm in Vercel **Domains** if they show a different A target |
 
-### API → backend VM
+### API → backend VM (HTD only)
 
 | Type | Name / Host | Value | Proxy |
 |------|-------------|-------|-------|
-| **A** | `api` | `187.77.99.225` | **DNS only** (no Cloudflare-style proxy — you are on mydata.city) |
+| **A** | `htdrollbook-api` | `187.77.99.225` | **DNS only** |
 
-If you use the alternative API name instead:
+**Do not add or change** the existing `api` A record if AngaPay uses `api.cybercothtechnetworks.co.zw` for production.
 
-| Type | Name / Host | Value |
-|------|-------------|-------|
-| **A** | `htdrollbook-api` | `187.77.99.225` |
-
-Then update nginx `server_name` and `vercel.json` to match that hostname.
+After the A record propagates, optional Vercel rewrite target: `http://htdrollbook-api.cybercothtechnetworks.co.zw/api/:path*`. Current default: direct `http://187.77.99.225:8599/api/:path*`.
 
 ### Do not change nameservers
 
@@ -84,10 +85,10 @@ Keep NivaCity nameservers (`ns1-4.mydata.city`). Only add/edit **records** in DN
 
 ```bash
 nslookup htdrollbook.cybercothtechnetworks.co.zw
-nslookup api.cybercothtechnetworks.co.zw
+nslookup htdrollbook-api.cybercothtechnetworks.co.zw
 ```
 
-Frontend should resolve to Vercel; API should resolve to `187.77.99.225`.
+Frontend should resolve to Vercel; HTD API should resolve to `187.77.99.225`.
 
 ---
 
@@ -114,20 +115,16 @@ Vercel handles HTTPS for `htdrollbook.cybercothtechnetworks.co.zw`. No cert work
 
 ### Backend API (nginx on 187.77.99.225)
 
-**Current state:** nginx listens on **port 80** for `api.cybercothtechnetworks.co.zw` and proxies to Spring Boot on `127.0.0.1:8599`. HTTP works as soon as the **A** record propagates.
+**Current state:** nginx listens on **port 80** for `htdrollbook-api.cybercothtechnetworks.co.zw` and proxies to Spring Boot on `127.0.0.1:8599`. Vercel uses direct `:8599` rewrites (no HTD nginx hostname required).
 
-**HTTPS (recommended after DNS is live)** — Let’s Encrypt via certbot on the server:
+**HTTPS (optional, after `htdrollbook-api` DNS is live):**
 
 ```bash
-# SSH as root (use your own credentials — do not commit passwords)
-apt-get install -y certbot python3-certbot-nginx   # if not installed
-certbot --nginx -d api.cybercothtechnetworks.co.zw
+certbot --nginx -d htdrollbook-api.cybercothtechnetworks.co.zw
 nginx -t && systemctl reload nginx
 ```
 
-Certbot adds a `:443` server block and HTTP→HTTPS redirect. Renewals are automatic via certbot timer.
-
-**Optional later — Cloudflare:** migrate the zone to Cloudflare, point nameservers there, set API record to proxied orange cloud, SSL mode **Full** (nginx on 80) or **Full (strict)** (with origin cert on 443). Not required while DNS stays on mydata.city.
+Do **not** run certbot for `api.cybercothtechnetworks.co.zw` — that hostname is AngaPay.
 
 ---
 
@@ -137,11 +134,11 @@ Root `vercel.json` rewrites browser `/api/*` to the backend.
 
 | Phase | Rewrite destination | When |
 |-------|---------------------|------|
-| **Before API DNS** | `http://187.77.99.225:8599/api/:path*` | Works today |
-| **After API DNS (HTTP nginx)** | `http://api.cybercothtechnetworks.co.zw/api/:path*` | After A record + nginx (repo default once DNS is ready) |
-| **After certbot** | `https://api.cybercothtechnetworks.co.zw/api/:path*` | After Let’s Encrypt on nginx |
+| **Current (default)** | `http://187.77.99.225:8599/api/:path*` | Works today; bypasses AngaPay `api` hostname |
+| **After `htdrollbook-api` DNS** | `http://htdrollbook-api.cybercothtechnetworks.co.zw/api/:path*` | Optional; nginx vhost already on server |
+| **After certbot on HTD API** | `https://htdrollbook-api.cybercothtechnetworks.co.zw/api/:path*` | After Let’s Encrypt on HTD subdomain only |
 
-If API calls fail right after deploy, temporarily revert the rewrite to the IP until DNS propagates, then switch back.
+Never point rewrites at `api.cybercothtechnetworks.co.zw` — AngaPay production.
 
 ---
 
@@ -151,11 +148,13 @@ On **`187.77.99.225`**:
 
 | Item | Path / value |
 |------|----------------|
-| nginx site | `/etc/nginx/sites-available/api.cybercothtechnetworks.co.zw` |
-| Enabled link | `/etc/nginx/sites-enabled/api.cybercothtechnetworks.co.zw` |
-| `server_name` | `api.cybercothtechnetworks.co.zw` |
+| nginx site | `/etc/nginx/sites-available/htdrollbook-api.cybercothtechnetworks.co.zw` |
+| Enabled link | `/etc/nginx/sites-enabled/htdrollbook-api.cybercothtechnetworks.co.zw` |
+| `server_name` | `htdrollbook-api.cybercothtechnetworks.co.zw` |
 | Upstream | `http://127.0.0.1:8599` |
 | CORS file | `/opt/htf-data-collection/htf-backend.env` |
+
+**Removed (AngaPay conflict):** HTD must not use `/etc/nginx/sites-enabled/api.cybercothtechnetworks.co.zw`.
 
 **CORS origins include:**
 
