@@ -1,11 +1,18 @@
 package org.salvationarmy.whatsapp.controller;
 
+import jakarta.validation.Valid;
+import org.salvationarmy.whatsapp.dto.ChangePasswordRequest;
+import org.salvationarmy.whatsapp.dto.CreateUserRequest;
+import org.salvationarmy.whatsapp.dto.UpdateUserRequest;
 import org.salvationarmy.whatsapp.dto.UserInfo;
 import org.salvationarmy.whatsapp.dto.UserResponse;
 import org.salvationarmy.whatsapp.entity.User;
 import org.salvationarmy.whatsapp.repository.UserRepository;
 import org.salvationarmy.whatsapp.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +27,8 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
+
+    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
     @Autowired
     private UserRepository userRepository;
@@ -69,13 +78,101 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<List<UserResponse>> getAllUsers(Authentication authentication) {
+    public ResponseEntity<?> getAllUsers(Authentication authentication) {
         try {
             List<UserResponse> users = userService.getAllUsers();
             return ResponseEntity.ok(users);
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().build();
+            logger.error("Failed to list users", e);
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to list users");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable UUID id) {
+        try {
+            return ResponseEntity.ok(userService.getUserById(id));
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "User not found");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        }
+    }
+
+    @PostMapping
+    public ResponseEntity<?> createUser(@Valid @RequestBody CreateUserRequest request) {
+        try {
+            UserResponse created = userService.createUser(
+                    request.getUsername(),
+                    request.getEmail(),
+                    request.getPassword(),
+                    request.getFullName(),
+                    request.getRole());
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to create user");
+            error.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateUser(@PathVariable UUID id, @Valid @RequestBody UpdateUserRequest request) {
+        try {
+            UserResponse updated = userService.updateUser(
+                    id,
+                    request.getEmail(),
+                    request.getFullName(),
+                    request.getRole(),
+                    request.getStatus());
+            return ResponseEntity.ok(updated);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to update user");
+            error.put("message", e.getMessage());
+            HttpStatus status = e.getMessage() != null && e.getMessage().contains("not found")
+                    ? HttpStatus.NOT_FOUND
+                    : HttpStatus.BAD_REQUEST;
+            return ResponseEntity.status(status).body(error);
+        }
+    }
+
+    @PutMapping("/{id}/password")
+    public ResponseEntity<?> changePassword(@PathVariable UUID id, @Valid @RequestBody ChangePasswordRequest request) {
+        try {
+            userService.changePassword(id, request.getNewPassword());
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Password updated successfully");
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to change password");
+            error.put("message", e.getMessage());
+            HttpStatus status = e.getMessage() != null && e.getMessage().contains("not found")
+                    ? HttpStatus.NOT_FOUND
+                    : HttpStatus.BAD_REQUEST;
+            return ResponseEntity.status(status).body(error);
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteUser(@PathVariable UUID id) {
+        try {
+            userService.deleteUser(id);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to delete user");
+            error.put("message", e.getMessage());
+            HttpStatus status = e.getMessage() != null && e.getMessage().contains("not found")
+                    ? HttpStatus.NOT_FOUND
+                    : HttpStatus.BAD_REQUEST;
+            return ResponseEntity.status(status).body(error);
         }
     }
 
